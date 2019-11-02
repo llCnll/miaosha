@@ -15,6 +15,7 @@ import java.util.Map;
 public class MQConfig {
 
     public final static String QUEUE = "queue";
+    public final static String MIAOSHA_QUEUE = "miaosha.queue";
     public final static String HEADER_QUEUE = "header_queue";
     public final static String TOPIC_QUEUE1 = "topic.queue1";
     public final static String TOPIC_QUEUE2 = "topic.queue2";
@@ -24,6 +25,14 @@ public class MQConfig {
     public final static String FANOUT_EXCHANGE = "fanoutExchange";
     public final static String HEADERS_EXCHANGE = "headersExchange";
 
+
+    /**
+     * Direct模式 交换机模式
+     */
+    @Bean
+    public Queue miaoshaQueue(){
+        return new Queue(MIAOSHA_QUEUE,true);
+    }
     /**
      * Direct模式 交换机模式
      */
