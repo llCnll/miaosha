@@ -5,6 +5,7 @@ import cn.chennan.miaosha.domain.MiaoshaUser;
 import cn.chennan.miaosha.rabbitmq.MQSender;
 import cn.chennan.miaosha.rabbitmq.MiaoshaMessage;
 import cn.chennan.miaosha.redis.GoodsKey;
+import cn.chennan.miaosha.redis.MiaoshaKey;
 import cn.chennan.miaosha.redis.RedisService;
 import cn.chennan.miaosha.result.CodeMsg;
 import cn.chennan.miaosha.result.Result;
@@ -12,15 +13,15 @@ import cn.chennan.miaosha.service.GoodsService;
 import cn.chennan.miaosha.service.MiaoshaService;
 import cn.chennan.miaosha.service.MiaoshaUserService;
 import cn.chennan.miaosha.service.OrderService;
+import cn.chennan.miaosha.util.MD5Util;
+import cn.chennan.miaosha.util.UUIDUtil;
 import cn.chennan.miaosha.vo.GoodsVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -72,11 +73,17 @@ public class MiaoshaController implements InitializingBean {
      * @param goodsId
      * @return
      */
-    @RequestMapping("/do_miaosha")
+    @RequestMapping("/{path}/do_miaosha")
     @ResponseBody
-    public Result<Integer> doMiaosha(Model model, MiaoshaUser user, @RequestParam("goodsId")Long goodsId){
+    public Result<Integer> doMiaosha(@PathVariable("path")String path, Model model, MiaoshaUser user, @RequestParam("goodsId")Long goodsId){
         //雪花算法 snowflake
         //log.info(user.getId()+"cn.chennan.miaosha.controller.MiaoshaController#doMiaosha");
+
+        String str = redisService.get(MiaoshaKey.getMiaoshaPath, user.getId() + "_" + goodsId, String.class);
+        if(path == null || str==null || !str.equals(path)){
+            return Result.error(CodeMsg.REQUEST_ILLEGAL);
+        }
+
         Long stock = redisService.decr(GoodsKey.getMiaoshaGoodsStock, "" + goodsId);
         if(stock < 0){
             return Result.error(CodeMsg.Miao_SHA_OVER);
@@ -95,6 +102,16 @@ public class MiaoshaController implements InitializingBean {
         sender.sendMiaoshaMessage(message);
 
         return Result.success(0);//表示排队中
+    }
+
+    @RequestMapping(value = "/path", method = RequestMethod.GET)
+    @ResponseBody
+    public Result<String> path(Model model, MiaoshaUser user, @RequestParam("goodsId")Long goodsId){
+
+        String str = MD5Util.md5(UUIDUtil.uuid());
+        redisService.set(MiaoshaKey.getMiaoshaPath, user.getId()+"_"+goodsId, str);
+
+        return Result.success(str);//表示排队中
     }
 
     /**
