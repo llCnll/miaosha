@@ -1,6 +1,8 @@
 package cn.chennan.miaosha.controller;
 
 import cn.chennan.miaosha.domain.MiaoshaUser;
+import cn.chennan.miaosha.interceptor.AccessLimit;
+import cn.chennan.miaosha.interceptor.Login;
 import cn.chennan.miaosha.redis.GoodsKey;
 import cn.chennan.miaosha.redis.RedisService;
 import cn.chennan.miaosha.result.Result;
@@ -57,6 +59,8 @@ public class GoodsController {
      */
     @RequestMapping(value = "/to_list"/*, produces = "text/html"*/)
     @ResponseBody
+    @Login
+    @AccessLimit(seconds = 5, maxCount = 5)
     public String toList(HttpServletRequest request, HttpServletResponse response, Model model, MiaoshaUser user){
        //log.info(user.getId()+"--->cn.chennan.miaosha.controller.GoodsController.toList");
 
@@ -103,6 +107,7 @@ public class GoodsController {
         model.addAttribute("goodsList", goodsList);
         return "goods_list";
     }*/
+    @Login
     @RequestMapping("/detail/{goodsId}")
     @ResponseBody
     public Result<GoodsDetailVo> toDetail2(HttpServletRequest request, HttpServletResponse response, Model model, MiaoshaUser user, @PathVariable("goodsId")Long goodsId){
@@ -139,6 +144,7 @@ public class GoodsController {
     * */
     @RequestMapping(value = "/to_detail/{goodsId}", produces = "text/html")
     @ResponseBody
+    @Login
     public String toDetail(HttpServletRequest request, HttpServletResponse response, Model model, MiaoshaUser user, @PathVariable("goodsId")Long goodsId){
         //雪花算法 snowflake
         String html = redisService.get(GoodsKey.getGoodsDetail, ""+goodsId, String.class);

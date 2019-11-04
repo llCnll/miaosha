@@ -1,6 +1,7 @@
 package cn.chennan.miaosha.controller;
 
 import cn.chennan.miaosha.domain.MiaoshaUser;
+import cn.chennan.miaosha.interceptor.Login;
 import cn.chennan.miaosha.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -15,6 +16,7 @@ public class MiaoshaUserController {
 
     @RequestMapping("/info")
     @ResponseBody
+    @Login
     public Result<MiaoshaUser> info(Model model, MiaoshaUser user){
         log.info(user.getId()+"cn.chennan.miaosha.controller.MiaoshaUserController.info");
         return Result.success(user);

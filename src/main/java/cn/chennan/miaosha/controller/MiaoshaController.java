@@ -2,6 +2,8 @@ package cn.chennan.miaosha.controller;
 
 import cn.chennan.miaosha.domain.MiaoshaOrder;
 import cn.chennan.miaosha.domain.MiaoshaUser;
+import cn.chennan.miaosha.interceptor.AccessLimit;
+import cn.chennan.miaosha.interceptor.Login;
 import cn.chennan.miaosha.rabbitmq.MQSender;
 import cn.chennan.miaosha.rabbitmq.MiaoshaMessage;
 import cn.chennan.miaosha.redis.GoodsKey;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @Controller
@@ -73,6 +76,7 @@ public class MiaoshaController implements InitializingBean {
      * @param goodsId
      * @return
      */
+    @Login
     @RequestMapping("/{path}/do_miaosha")
     @ResponseBody
     public Result<Integer> doMiaosha(@PathVariable("path")String path, Model model, MiaoshaUser user, @RequestParam("goodsId")Long goodsId){
@@ -104,9 +108,12 @@ public class MiaoshaController implements InitializingBean {
         return Result.success(0);//表示排队中
     }
 
+    //@AccessLimit(seconds = 5, maxCount = 5)
+    @Login
+    @AccessLimit(seconds = 5, maxCount = 5)
     @RequestMapping(value = "/path", method = RequestMethod.GET)
     @ResponseBody
-    public Result<String> path(Model model, MiaoshaUser user, @RequestParam("goodsId")Long goodsId){
+    public Result<String> path(HttpServletRequest request, Model model, MiaoshaUser user, @RequestParam("goodsId")Long goodsId){
 
         String str = MD5Util.md5(UUIDUtil.uuid());
         redisService.set(MiaoshaKey.getMiaoshaPath, user.getId()+"_"+goodsId, str);
@@ -123,6 +130,7 @@ public class MiaoshaController implements InitializingBean {
      * @param goodsId
      * @return
      */
+    @Login
     @RequestMapping("/result")
     @ResponseBody
     public Result<Long> miaoshaResult(Model model, MiaoshaUser user, @RequestParam("goodsId")Long goodsId){
